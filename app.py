@@ -97,6 +97,26 @@ if selected_crimes_trend:
 else:
     st.info("Select at least one crime to see the trend.")
 
+# --- Treemap ---
+st.subheader("🟥 How do crimes compare in scale?")
+
+treemap_data = pd.DataFrame({
+    "Crime": list(crime_cols_I.keys()),
+    "Cases": [int(india_2023[col]) for col in crime_cols_I.values()]
+})
+
+fig_tree = px.treemap(
+    treemap_data,
+    path=["Crime"],
+    values="Cases",
+    color="Cases",
+    color_continuous_scale="Reds",
+    title="Crime Against Women — Proportional Scale, All India 2023"
+)
+fig_tree.update_traces(textinfo="label+value")
+fig_tree.update_layout(coloraxis_showscale=False)
+st.plotly_chart(fig_tree, use_container_width=True)
+
 st.markdown("---")
 
 # --- Chart 2: Crime Category Totals (2023) ---
@@ -156,6 +176,36 @@ else:
 
 fig3.update_layout(showlegend=False, coloraxis_showscale=False, height=800)
 st.plotly_chart(fig3, use_container_width=True)
+
+
+# --- India Choropleth Map ---
+st.subheader("🗺️ India Heatmap — Crimes by State (2023)")
+
+import plotly.express as px
+
+selected_crime_map = st.selectbox(
+    "Select crime for map view:",
+    list(crime_cols_I.keys()),
+    key="map_crime"
+)
+map_col = crime_cols_I[selected_crime_map]
+use_rate_map = st.toggle("Use crime rate per lakh population", value=True, key="map_rate")
+
+if use_rate_map:
+    map_col = map_col.replace("_I", "_R")
+
+fig_map = px.choropleth(
+    df_2023,
+    geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+    featureidkey="properties.ST_NM",
+    locations="State_UT",
+    color=map_col,
+    color_continuous_scale="Reds",
+    title=f"{selected_crime_map} — State wise, 2023"
+)
+fig_map.update_geos(fitbounds="locations", visible=False)
+fig_map.update_layout(coloraxis_showscale=True, height=600)
+st.plotly_chart(fig_map, use_container_width=True)
 
 st.markdown("---")
 
